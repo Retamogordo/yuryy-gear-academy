@@ -1,18 +1,40 @@
 #![no_std]
 
-use gstd::prelude::*;
+use gstd::{exec, msg, prelude::*};
+use tmg1_io::{Tamagotchi, TmgAction, TmgEvent};
+
+static mut TAMAGOTCHI: Option<Tamagotchi> = None;
 
 #[no_mangle]
 extern "C" fn init() {
-    // TODO: 5️⃣ Initialize the Tamagotchi program
+    let name: String = msg::load().expect("Can't load init message");
+
+    unsafe { TAMAGOTCHI = Some(
+        Tamagotchi {
+            name,
+            date_of_birth: exec::block_timestamp() 
+        })
+    };
 }
 
 #[no_mangle]
 extern "C" fn handle() {
-    // TODO: 6️⃣ Add handling of `Name` and `Age` actions
+    let action: TmgAction = msg::load().expect("Error on loading Tamagotchi Action");
+    let tmg = unsafe { TAMAGOTCHI.as_ref().expect("Contract not initialized") };
+
+    match action {
+        TmgAction::Name => msg::reply(TmgEvent::Name(tmg.name.clone()), 0),
+        TmgAction::Age => msg::reply(
+            TmgEvent::Age(exec::block_timestamp() - tmg.date_of_birth), 0
+        ),
+    }
+    .expect("Failed replying to sender");
 }
 
 #[no_mangle]
 extern "C" fn state() {
-    // TODO: 7️⃣ Return the Tamagotchi state
+    msg::reply(
+        unsafe { TAMAGOTCHI.as_ref().expect("Contract not initialized") }, 0
+    )
+    .expect("Unable to return Tamagotchi instance");
 }
