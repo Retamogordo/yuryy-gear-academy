@@ -1,7 +1,7 @@
 #![no_std]
 
 use gstd::{exec, msg, prelude::*};
-use tmg2_io::{
+use tmg3_io::{
     Tamagotchi, TmgAction, TmgEvent, 
     HUNGER_PER_BLOCK, BOREDOM_PER_BLOCK, ENERGY_PER_BLOCK, 
     FILL_PER_FEED, FILL_PER_ENTERTAINMENT, FILL_PER_SLEEP  
@@ -27,6 +27,7 @@ extern "C" fn init() {
             entertained_block: current_block,
             slept: Default::default(),
             slept_block: current_block, 
+            approved_account: Default::default(),
         })
     };
 }
@@ -62,6 +63,24 @@ extern "C" fn handle() {
             tmg.slept.try_add(FILL_PER_SLEEP).expect("Slept value is out of range");
             tmg.slept_block = current_block;
             msg::reply(TmgEvent::Slept, 0)
+        },
+        TmgAction::Transfer(new_owner) => {
+            assert!(msg::source() == tmg.owner);
+            tmg.owner = new_owner;
+            // I conjecture that the new owner prefers to not inhere approved account from the previous owner
+            tmg.approved_account = None; 
+            msg::reply(TmgEvent::Transferred, 0)
+        },
+        TmgAction::Approve(account) => {
+            // supposing the owner doesn't mean to approve themselves
+            assert!(msg::source() == tmg.owner && account != tmg.owner);
+            tmg.approved_account = Some(account);
+            msg::reply(TmgEvent::Approved, 0)
+        },
+        TmgAction::RevokeApproval => {
+            assert!(msg::source() == tmg.owner);
+            tmg.approved_account = None;
+            msg::reply(TmgEvent::ApprovalRevoked, 0)
         },
         TmgAction::Full => msg::reply(TmgEvent::Full(tmg.clone()), 0),
     }

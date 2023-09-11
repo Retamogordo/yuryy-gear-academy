@@ -24,6 +24,7 @@ pub struct Tamagotchi {
     pub entertained_block: u64,
     pub slept: Mood,
     pub slept_block: u64,
+    pub approved_account: Option<ActorId>,
 }
 
 #[derive(Clone, Encode, Decode, TypeInfo, Debug)]
@@ -75,6 +76,9 @@ pub enum TmgAction {
     Entertain,
     Sleep,
     Full,
+    Transfer(ActorId),
+    Approve(ActorId),
+    RevokeApproval,
 }
 
 #[derive(Encode, Decode, TypeInfo)]
@@ -84,6 +88,9 @@ pub enum TmgEvent {
     Fed,
     Entertained,
     Slept,
+    Transferred,
+    Approved,
+    ApprovalRevoked,
     Full(Tamagotchi)
 }
 
