@@ -1,5 +1,5 @@
 [package]
-name = "tmg3-io"
+name = "tmg2-io"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
